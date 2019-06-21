@@ -9,6 +9,7 @@ file.
 Usage: python3 convert_to_diar.py input_out.json output_diar.json
 """
 
+import argparse
 import json
 import logging
 import sys
@@ -100,15 +101,17 @@ def round_diar(diar, dec_pt=2):
         diar2.append((d[0], round(d[1], dec_pt), round(d[2], dec_pt)))
     return diar2
 
-def convert(argv):
-    if len(argv) != 3:
-        logging.error("Must specify input.json and output.json")
-        sys.exit(-1)
+def convert():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input", help="Input transcription json file")
+    parser.add_argument("output", help="Output diarization json file")
+    args = parser.parse_args()
+
     try:
-        tr = json.load(open(argv[1]))
+        tr = json.load(open(args.input))
     except Exception as inst:
         logging.error("Run-time error={} while loading an input file={}".format(
-                inst, argv[1]))
+                inst, args.input))
 
     # Extract speaker IDs and time intervals
     diar = parse_stt_results(tr)
@@ -124,13 +127,13 @@ def convert(argv):
     check_overlap(diar)
 
     try:
-        with open(argv[2], 'w') as fout:
+        with open(args.output, 'w') as fout:
             json.dump(diar, fout)
     except Exception as inst:
         logging.error("Run-time error={} while saving an output file={}".format(
-                inst, argv[2]))
+                inst, args.output))
 
     logging.info("Done!")
 
 if __name__ == '__main__':
-    convert(sys.argv)
+    convert()
