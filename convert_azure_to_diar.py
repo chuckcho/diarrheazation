@@ -41,6 +41,10 @@ def check_overlap(diar):
         logging.warn("Trivially small set (len<=1)")
         return
     for d1, d2 in zip(diar, diar[1:]):
+        if d1[1] > d2[1]:
+            logging.error("d1=({},{}), d2=({},{}): Sort timelines first! " \
+                    "Stop!".format(d1[1], d1[2], d2[1], d2[2]))
+            eye.exit(-2)
         if d1[2] > d2[1]:
             logging.warn("d1=({},{}), d2=({},{}): There's an overlap! " \
                     "Panic!".format(d1[1], d1[2], d2[1], d2[2]))
