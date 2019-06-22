@@ -38,3 +38,7 @@ python3 convert_to_diar.py sample/kip_google_out.json sample/kip_google_diar.jso
 # Calculate DER with Azure results as a ground-truth and Google results as a hypothesis
 python3 der.py sample/kip_azure_diar.json sample/kip_google_diar.json
 ```
+
+## Todo(chuck)
+1. Annotate a small sample and get real DER's for Azure and Google.
+2. Visualize time lines as in http://pyannote.github.io/pyannote-metrics/tutorial.html
