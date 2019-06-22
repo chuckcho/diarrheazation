@@ -72,6 +72,45 @@ def parse_google_stt_results(results):
             diar.append(diar_seg)
     return diar
 
+def trim_diar(diar, start_time, end_time, offset_start=False):
+    """ Trim diarization timelines given start,end times and a flag to offset
+    the start_time (start_time becomes 0.0 in the output)
+    """
+
+    # Limit start/end times
+    if not start_time:
+        start_time = 0.0
+    if not end_time:
+        end_time = max(diar, key=lambda x:x[2])[2]
+
+    # argparse may have passed strings not numerics
+    start_time, end_time = float(start_time), float(end_time)
+
+    # Setting offset
+    if offset_start:
+        offset = start_time
+    else:
+        offset = 0.0
+
+    diar2 = []
+
+    for d in diar:
+        # If the start of the interval is later than the specified end time,
+        # ignore
+        if d[1] >= end_time:
+            continue
+        # If the end of the interval is earlier than the specified start time,
+        # ignore
+        if d[2] <= start_time:
+            continue
+
+        # Put together a timeline
+        d_start = max(d[1], start_time) - offset
+        d_end = min(d[2], end_time) - offset
+        diar2.append( (d[0], d_start, d_end) )
+
+    return diar2
+
 def sort_diar(diar):
     """ Sort by the offset/start time
     """
@@ -105,6 +144,12 @@ def convert():
     parser = argparse.ArgumentParser()
     parser.add_argument("input", help="Input transcription json file")
     parser.add_argument("output", help="Output diarization json file")
+    parser.add_argument("-s", "--start-time", help="Start time in second for " \
+            "processing")
+    parser.add_argument("-e", "--end-time", help="End time in second for " \
+            "processing")
+    parser.add_argument("-o", "--offset-start", help="Offset start time.",
+            action="store_true")
     args = parser.parse_args()
 
     try:
@@ -115,6 +160,13 @@ def convert():
 
     # Extract speaker IDs and time intervals
     diar = parse_stt_results(tr)
+
+    # Slice and dice timelines if specified
+    if args.start_time or args.end_time:
+        diar = trim_diar(diar,
+                start_time=args.start_time,
+                end_time=args.end_time,
+                offset_start=args.offset_start)
 
     # Make sure diarization results are sorted by the offset
     diar = sort_diar(diar)
