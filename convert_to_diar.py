@@ -86,6 +86,9 @@ def trim_diar(diar, start_time, end_time, offset_start=False):
     # argparse may have passed strings not numerics
     start_time, end_time = float(start_time), float(end_time)
 
+    # Sanity check
+    assert start_time < end_time
+
     # Setting offset
     if offset_start:
         offset = start_time
