@@ -23,7 +23,7 @@ python3 der.py sample/kip_gt_diar_fake.json sample/kip_azure_diar.json
 3. The above should yield a caculated DER of 0.269 or 26.9%.
 
 ## Another example
-For now, Google allows up to a minute of audio for their beta version of diarization. Hence, 00:01:00 to 00:01:59 of original audio was passed to Google to get [the result](./sample/kip_google_s60_e119_out.json).
+For now, Google allows up to a minute of audio for their beta version of diarization. Hence, 00:01:00 to 00:01:59 of original audio was passed to Google to get [the result](./sample/kip_google_out_s60_e119.json).
 The following will convert and trim Azure results to compensate for this trimming/offsetting (each additional arguments meaning start time = 60 sec. end time = 119 sec. and offseting the start time)
 ```
 python3 convert_to_diar.py sample/kip_azure_out.json sample/kip_azure_diar_s60_e119.json -s 60 -e 119 -o
@@ -31,9 +31,6 @@ python3 convert_to_diar.py sample/kip_azure_out.json sample/kip_azure_diar_s60_e
 
 With that, we can compare diarization results between Google and Azure (how well they match up -- 0.0 if they yield exactly same diarization results).
 ```
-# Convert Azure results
-python3 convert_to_diar.py sample/kip_azure_out.json sample/kip_azure_diar_s60_e119.json -s 60 -e 119 -o # same as previous ^
-
 # Convert Google results
 python3 convert_to_diar.py sample/kip_google_out_s60_e119.json sample/kip_google_diar_s60_e119.json
 
@@ -45,5 +42,8 @@ python3 der.py sample/kip_gt_diar_s60_e119.json sample/kip_google_diar_s60_e119.
 ```
 DER for Azure should be 88.3% and DER for Google should be 51.5%.
 
-## Todo(chuck)
-- Visualize time lines as in http://pyannote.github.io/pyannote-metrics/tutorial.html
+## Visualization / listening to diarized segments
+A popular open-source audio tool Audacity can handle "label tracks" for visualization and playing predefined segments. The following will convert diariazation json file into a "label track" file that can be loaded in Audacity.
+```
+python3 convert_diar_to_label_track.py sample/kip_azure_diar_s60_e119.json sample/kip_azure_diar_s60_s119.txt
+```
