@@ -43,7 +43,8 @@ python3 der.py sample/kip_gt_diar_s60_e119.json sample/kip_google_diar_s60_e119.
 DER for Azure should be 88.3% and DER for Google should be 51.5%.
 
 ## Visualization / listening to diarized segments
-A popular open-source audio tool Audacity can handle "label tracks" for visualization and playing predefined segments. The following will convert diariazation json file into a "label track" file that can be loaded in Audacity.
+A popular open-source audio tool Audacity can handle "label tracks" for visualization and playing predefined segments.
+The following will convert diariazation json file into a "label track" file that can be loaded in Audacity. (`jq` is required)
 ```
-python3 convert_diar_to_label_track.py sample/kip_azure_diar_s60_e119.json sample/kip_azure_diar_s60_s119.txt
+cat sample/kip_azure_diar_s60_e119.json | jq -r '.[] | [.[1,2,0]] | @tsv' > sample/kip_azure_diar_s60_s119.txt
 ```
