@@ -15,10 +15,10 @@ import logging
 import sys
 logging.basicConfig(level=logging.DEBUG)
 
-def parse_stt_results(results):
+def parse_stt_results(results, treat_null_as="ignore"):
     if "AudioFileResults" in results:
         logging.info("Azure transcript detected.")
-        return parse_azure_stt_results(results)
+        return parse_azure_stt_results(results, treat_null_as)
     elif "results" in results:
         logging.info("Google transcript detected.")
         return parse_google_stt_results(results)
@@ -27,22 +27,79 @@ def parse_stt_results(results):
                 "Panic!")
         sys.exit(-3)
 
-def parse_azure_stt_results(results, ignore_null=True):
+def parse_azure_stt_results(results, treat_null_as="ignore"):
     """ Parse Azure STT result json file, and optionally ignore null as an
     SpeakerId.
+        treat_null_as=="ignore": ignore null
+        treat_null_as=="prev": match null speaker as the last speaker
+        treat_null_as=="next": match null speaker as the immediate next speaker
     """
+
+    treat_null_as = treat_null_as.lower()
     diar = []
     assert len(results["AudioFileResults"]) == 1
     seg_results = results["AudioFileResults"][0]["SegmentResults"]
     for seg in seg_results:
         sid = seg["SpeakerId"]
-        if ignore_null and sid == None:
-            continue
+        if sid == None:
+            if treat_null_as.startswith("i"):
+                continue
+            # For prev/next speakers, add a marker with P or N for now.
+            # At a second pass, assign real speaker IDs for these markers
+            elif treat_null_as.startswith("p"):
+                sid = "_P_"
+            elif treat_null_as.startswith("n"):
+                sid = "_N_"
+            else:
+                logging.error("Invalid treat_null_as value. Exitting...")
+                sys.exit(-4)
         offset = seg["Offset"] / 1.e7
         end = offset + seg["Duration"] / 1.e7
         diar_seg = (sid, offset, end)
         diar.append(diar_seg)
-    return diar
+
+    if treat_null_as.startswith("i"):
+        return diar
+    elif treat_null_as.startswith("p"):
+        # Forward pass to replace "_P_" with a real speaker ID
+        diar2 = []
+        psid = None
+        for d in diar:
+            (sid, offset, end) = d
+            if sid == "_P_":
+                if psid:
+                    sid = psid
+                    # sid <- psid
+                    diar2.append((sid, offset, end))
+                else:
+                    logging.warn("Previous speaker unavailable. Ignoring...")
+                    continue
+            else:
+                psid = sid
+                # Just, as is.
+                diar2.append(d)
+        return diar2
+    elif treat_null_as.startswith("n"):
+        # Backward pass to replace "_N_" with a real speaker ID
+        diar2 = []
+        nsid = None
+        for d in reversed(diar):
+            (sid, offset, end) = d
+            if sid == "_N_":
+                if nsid:
+                    sid = nsid
+                    # sid <- nsid
+                    diar2.append((sid, offset, end))
+                else:
+                    logging.warn("Next speaker unavailable. Ignoring...")
+                    continue
+            else:
+                nsid = sid
+                # Just, as is.
+                diar2.append(d)
+        # Now, reverse the result
+        diar2.reverse()
+        return diar2
 
 def parse_google_stt_results(results):
     """ Parse Google Cloud STT result json file
@@ -153,6 +210,9 @@ def convert():
             "processing")
     parser.add_argument("-o", "--offset-start", help="Offset start time.",
             action="store_true")
+    parser.add_argument("-n", "--treat-null-as", help="How to treat Azure's " \
+            "'null' speaker ID. One of 'ignore', 'previous', or 'next'",
+            default="i")
     args = parser.parse_args()
 
     try:
@@ -162,7 +222,7 @@ def convert():
                 inst, args.input))
 
     # Extract speaker IDs and time intervals
-    diar = parse_stt_results(tr)
+    diar = parse_stt_results(tr, args.treat_null_as)
 
     # Slice and dice timelines if specified
     if args.start_time or args.end_time:
