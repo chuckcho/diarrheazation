@@ -10,15 +10,16 @@ Usage: python3 der.py ref_diar.json hyp_diar.json
 
 import json
 import logging
-import simpleder
+from pyannote.core import Segment, Timeline, Annotation
+from pyannote.metrics.diarization import DiarizationErrorRate
 import sys
 logging.basicConfig(level=logging.DEBUG)
 
-def a_bit_of_massaging(x):
-    """ Converts a list of lists (of mixed numeric types) into a list of tuples
-    (of float only)
-    """
-    return [ (e[0], float(e[1]), float(e[2])) for e in x ]
+def convert_to_pyannote(diar, filename=None):
+    annotation = Annotation(uri=filename)
+    for (sid, offset, end) in diar:
+        annotation[Segment(offset, end)] = sid
+    return annotation
 
 def run_der(argv):
     if len(argv) != 3:
@@ -39,14 +40,20 @@ def run_der(argv):
         logging.error("Run-time error={} while loading a hyp file={}".format(
                 inst, argv[2]))
 
-    # DER is picky as it requires a list of tuples, but json converts tuples
-    # into lists, also DER assumes all numbers are in float type (not int).
-    # Hence, a bit of massaging is needed
-    ref, hyp = a_bit_of_massaging(ref), a_bit_of_massaging(hyp)
+    ref = convert_to_pyannote(ref, filename=argv[2])
+    hyp = convert_to_pyannote(hyp, filename=argv[2])
 
     # Calculate DER and print.
-    error = simpleder.DER(ref, hyp)
-    logging.info("DER={:.3f}".format(error))
+    metric = DiarizationErrorRate()
+    error = metric(ref, hyp, detailed=True)
+    logging.info("DER={:.3f}".format(error['diarization error rate']))
+    logging.info("Detailed DER info=\n{}".format(error))
+
+    # Detailed report
+    report = metric.report(display=False)
+    logging.info(report)
+
+
     logging.info("Done!")
 
 if __name__ == '__main__':

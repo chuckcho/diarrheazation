@@ -3,7 +3,7 @@
 A "quick" and "dirty" tool for diarization, hence the name.
 
 ## Requirements
-1. [SimpleDER](https://github.com/wq2012/SimpleDER)
+1. [pyannote.metrics](http://pyannote.github.io/pyannote-metrics/)
 
 Run `pip3 install -r requirementx.txt` to install requirements.
 
@@ -40,7 +40,6 @@ python3 der.py sample/kip_gt_diar_s60_e119.json sample/kip_azure_diar_s60_e119.j
 # Calculate DER for Google results
 python3 der.py sample/kip_gt_diar_s60_e119.json sample/kip_google_diar_s60_e119.json
 ```
-DER for Azure should be 88.3% and DER for Google should be 51.5%.
 
 ## Visualization / listening to diarized segments
 A popular open-source audio tool Audacity can handle "label tracks" for visualization and playing predefined segments.
