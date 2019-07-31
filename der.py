@@ -10,7 +10,8 @@ Usage: python3 der.py ref_diar.json hyp_diar.json
 
 import json
 import logging
-import simpleder
+import calder as der
+#import simpleder as der
 import sys
 logging.basicConfig(level=logging.DEBUG)
 
@@ -45,7 +46,7 @@ def run_der(argv):
     ref, hyp = a_bit_of_massaging(ref), a_bit_of_massaging(hyp)
 
     # Calculate DER and print.
-    error = simpleder.DER(ref, hyp)
+    error = der.DER(ref, hyp)
     logging.info("DER={:.3f}".format(error))
     logging.info("Done!")
 
