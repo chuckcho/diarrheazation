@@ -46,5 +46,5 @@ DER for Azure should be 88.3% and DER for Google should be 51.5%.
 A popular open-source audio tool Audacity can handle "label tracks" for visualization and playing predefined segments.
 The following will convert diariazation json file into a "label track" file that can be loaded in Audacity. (`jq` is required)
 ```
-cat sample/kip_azure_diar_s60_e119.json | jq -r '.[] | [.[1,2,0]] | @tsv' > sample/kip_azure_diar_s60_s119.txt
+cat sample/kip_azure_diar_s60_e119.json | jq -r '.[] | [.[1,2,0]] | @tsv' > sample/kip_azure_diar_s60_e119.tsv
 ```
